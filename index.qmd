@@ -1,0 +1,123 @@
+---
+title: "Assignment 3"
+subtitle: "Occupation and Prestige Analysis"
+author: "Michaela Luceno" 
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#|label: setup
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(broom)
+library(performance)
+library(gt)
+
+data <- attitude |>
+  select(rating, complaints, learning, raises)|>
+  drop_na()
+  
+```
+
+### Descriptives Table 
+
+```{r}
+#|label: descriptives table 
+#|tbl-cap: "Descriptive Statistics for Continuous Variables"
+
+descriptives <- data|>
+summarise(
+    across(
+      c(rating, complaints, learning, raises),
+      list(mean = mean, sd = sd, min = min, max = max)
+    )
+  ) |>
+  pivot_longer(
+    everything(),
+    names_to = c("variable", ".value"),
+    names_sep = "_"
+  )
+
+descriptives |>
+  gt() |>
+  fmt_number(columns = where(is.numeric), decimals = 2)
+
+#Looking at the correlations of data, and specific comparison to the rating 
+#cor(data)
+#cor(data$rating, data[, c("complaints", "learning","raises")])
+```
+
+### Distribution of Ratings 
+
+```{r}
+#|label: outcome-distribution 
+#|fig-cap: "Distrubtion of ratings across factors"
+
+#Make sure that your table vs figure captions are correctly done, when previewing; titles 
+
+ggplot(data, aes(x = rating)) +
+  geom_histogram(
+    aes(y = after_stat(density)),
+    bins = 13, #change number of bins to see/not the gap - 13 is threshold 
+    fill = "#FFC0CB",
+    color = "white",
+    alpha = 0.8) +
+  geom_density(
+    linewidth = 0.9,
+    color = "#8B636C") +
+  labs(
+    x = "Overall Workplace Rating",
+    y = "Density") +
+  theme_light(base_size = 12)
+```
+
+### Relationship Between Complaints and Ratings
+
+```{r}
+#|label: complaint-ratings scatterplot
+#|fig-cap: "Relationship Between Complaints and Ratings"
+
+ggplot(data, aes(x = complaints, y = rating)) + 
+  geom_point(alpha = 0.60) +
+  geom_smooth(
+  method = "lm",
+  se = TRUE, 
+  colour = "#FFC0CB")+
+  labs(
+    x = "Handling Employee Complaints",
+    y = "Overall Workplace Rating") +
+   theme_light(base_size = 12)
+```
+
+### Relationship Between Learning and Ratings 
+
+```{r}
+#|label: learning-ratings scatterplot 
+#|fig-cap: "Relationship Between Opportunity to Learn and Ratings"
+
+ggplot(data, aes(x = learning, y = rating)) + 
+  geom_point(alpha = 0.60) +
+  geom_smooth(
+  method = "lm",
+  se = TRUE, 
+  colour = "#FFC0CB")+
+  labs(
+    x = "Opportunity to Learn",
+    y = "Overall Workplace Rating") +
+   theme_light(base_size = 12)
+```
+
+The plots that were generated explored the relationships between the overall workplace rating and the handling of employee complaints, and also the opportunity to learn, respectively. Each plot shows a bivariate relationship to assess whether it may be linear, however it does not control for the other factors/predictors. Both plots maintain a positive relationship that is relatively linear. However, the graph examining workplace rating versus the handling of employee complaints shows observed data points which are closer to the regression line and present a trend that can more confidently be described as linear; the confidence interval band is also smaller reflecting a greater certainty. However, the graph modeling overall ratings versus the opportunity to learn exhibits data that looks more dispersed in its positive trend and maintains more outliers (however, their potential influence has not yet been determined). A greater confidence interval (gray band) can be seen underlying the regression line. 
