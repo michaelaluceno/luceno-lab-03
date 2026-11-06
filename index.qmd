@@ -32,7 +32,7 @@ data <- attitude |>
   
 ```
 
-### Descriptives Table 
+### Descriptive Statistics 
 
 ```{r}
 #|label: descriptives table 
@@ -120,11 +120,12 @@ ggplot(data, aes(x = learning, y = rating)) +
    theme_light(base_size = 12)
 ```
 
-The plots that were generated explored the relationships between the overall workplace rating and the handling of employee complaints, and also the opportunity to learn, respectively. Each plot shows a bivariate relationship to assess whether it may be linear, however it does not control for the other factors/predictors. Both plots maintain a positive relationship that is relatively linear. However, the graph examining workplace rating versus the handling of employee complaints shows observed data points which are closer to the regression line and present a trend that can more confidently be described as linear; the confidence interval band is also smaller reflecting a greater certainty. However, the graph modeling overall ratings versus the opportunity to learn exhibits data that looks more dispersed in its positive trend and maintains more outliers (however, their potential influence has not yet been determined). A greater confidence interval (gray band) can be seen underlying the regression line. 
+The plots that were generated explored the relationships between the overall workplace rating with the handling of employee complaints, and also the opportunity to learn, respectively. Each plot shows a bivariate relationship to assess whether it may be linear, however it does not control for the other factors/predictors. Both plots maintain a positive relationship that is relatively linear. However, the graph examining workplace rating versus the handling of employee complaints shows observed data points which are closer to the regression line and present a trend that can more confidently be described as linear; the confidence interval band is also smaller reflecting a greater certainty. However, the graph modeling overall ratings versus the opportunity to learn exhibits data that looks more dispersed in its positive trend and maintains more outliers (however, their potential influence has not yet been determined). A greater confidence interval (gray band) can be seen underlying the regression line. 
 
-Before fitting the data, expectation of how the three factors, being handling of employee complaints (complaints), the opportunity to learn (learning), and pay increases (raises), might relate to the workplace ratings. Higher workplace ratings could be assumed to relate to to an improved handling of employee complaints, as it would indicate that the company is attentive towards their employees and aims to resolve any complaints. Therefore, the improved handling of employee complaints, as noted by a higher score would likely be positively correlated with workplace ratings. However, the handling of complaints alone would not be the determining factor of employee ratings, as pay increases might also be a factor in satisfaction as it might be more important to some employees, but additionally a component of the employee complains and how they might be handled. Finally, opportunities for learning can be an additional factor to understanding workplace ratings, as it may be viewed differently throughout individuals - some may enjoy the opportunity to learn and some might not. Their perspective, as well as how they might have brought this issue up in a complaint could furthermore be related and be a significant component in how employees rate their overall experience. 
+###Developing Predictions 
+Before fitting the data, expectation of how the three factors, being handling of employee complaints (complaints), the opportunity to learn (learning), and pay increases (raises), might relate to the workplace ratings. Higher workplace ratings could be assumed to relate to to an improved handling of employee complaints, as it would indicate that the company is attentive towards their employees and aims to resolve any complaints. Therefore, the improved handling of employee complaints, as noted by a higher score would likely be positively correlated with workplace ratings. However, the handling of complaints alone would not be the determining factor of employee ratings, as pay increases might also be a factor in satisfaction as it might be more important to some employees, but additionally a component of the employee complaints and how they might be handled. Finally, opportunities for learning can be an additional factor to understanding workplace ratings, as it may be viewed differently throughout individuals - some may enjoy the opportunity to learn and some might not. Their perspective, as well as how they might have brought this issue up in a complaint could furthermore be related and be a significant component in how employees rate their overall experience. 
 
-# Estimating the competing models 
+# Specify and Estimate Competing Models 
 
 ```{r}
 #| label: fit-models 
@@ -142,16 +143,20 @@ mod2 <- lm(rating ~ complaints + learning, data = data)
 mod3 <- lm (rating ~ complaints + learning + raises, data = data)
 ```
 
-# Exploring Models
+# Inspecting Models
 
+```r
 summary(mod0)
 summary(mod1)
 summary(mod2)
 summary(mod3)
+```
 
 Throughout comparing the complaints coefficient in relation to the employee ratings starting in Model 1 (mod1), the coefficient starts at 0.75, however with the addition of learning in Model 2, the coefficients is decreased to be 0.64. Finally, adjusting for the raises, the coefficients slightly changed to be 0.65. These values can be interpreted as the addition of all variables shows that the positive relationship shows that increased ability to handle employee complaints provides a substantial and positive relationship with the increase of employee ratings. 
 
-# Nested-model F-tests 
+## Comparing Model Performance
+
+### Nested-model Comparisons 
 
 ```{r}
 #|label: nested-model F-tests 
@@ -160,8 +165,7 @@ tests <- anova(mod0, mod1, mod2, mod3)
 
 tests
 ```
-
-
+As we add predictors and complexity to the model, it is important to understand whether it improves predictive ability. In model 1, complaint handling was added to the intercept-only model and that there was a significant decrease (from 4297 to 1359.4) in the residual sum of squares, meaning that the predictions are better fitted to the observed data. We can also see that the F statistic is very high, showing significant improvement with the addition of complaints. In model 2, we see the addition of learning opportunities, and it slightly decreases the residual sum of squares (by 114.73), but not as much as model 1 to the intercept form. The F-statistic had a slight change, but overall not major. Finally, adding the predictor of a pay increases reflects practically no change in predictive value, as the RSS is practically the exact same as model 2, with a sum of squares and F-statistic value which has barely changed. As a whole, the addition of complaints to the intercept model provides the largest benefit in the model than the addition of other predictors on top of that. 
 ```{r}
 #|label: table of F-test results 
 
@@ -171,12 +175,11 @@ tests <- tests|>
     Residual.Df = Res.Df, 
     Nested.Df = Df,
     Nested.F.Stat = F, 
-    Nested.p.Value = `Pr(>F)`
-  )
+    Nested.p.Value = `Pr(>F)`)
 
 ```
 
-## Extracting Model Performance Statistics 
+ 
 ```{r}
 #|label: extract model performance 
 
@@ -202,7 +205,6 @@ comparison.table <- cbind(
 
 ```
 
-#Calculate Changes in Variance 
 ```{r}
 #| label: create-model-performance-table
 
@@ -227,11 +229,11 @@ comparison.table <- comparison.table|>
 
 ```
 
-# Combine and Display Model Comparison Table
+### Combine and Display Model Comparison Table
 
 ```{r}
 #|label: combine-model-comparison-table
-#|fig-cap: "Model Performance and Nested Model Comparison"
+#|tbl-cap: "Model Performance and Nested Model Comparison"
 
 comparison.table|>
   gt()|>
@@ -262,3 +264,165 @@ comparison.table|>
     missing_text = "—")
 
 ```
+
+### Interpreting the Combined Table 
+
+The R2 value highlights the proportion of variance that can be explained by predictors within in a model. A higher R2 value means that the model predicts a higher proportion of the variance of the model, which is typically seen with the R2 value when adding predictors. M2 and M3 have almost identical R2 values, being **`r round(comparison.table$r.squared[3], 3)`** with a slightly higher R2 value in M3 at the fourth decimal place. Therefore, the M2 model (including complaints and learning) explains the largest proportion of variance with respect to the rating. The adjusted R2, however, is sensitive to the addition of Model 2, which is **`r round(comparison.table$adj.r.squared[4], 3)`**, where ratings are predicted by complaints and learning. Then, model 3 (with all three predictors) follows with **`r round(comparison.table$adj.r.squared[3], 3)`**, and then finally model 1 with **`r round(comparison.table$adj.r.squared[4], 3)`**. This reflects that the addition of all predictors does not necessarily mean that the model will be accounting for more variance. In fact, the exclusion of raises, being the discrepant feature between models 2 and 3, actually allowed for the model to account for more of the variance. The adjusted R2 value highlights the notion that more information does not always equate to improved predictive accuracy. RMSE highlights the average size of the prediction errors that the model would make, therefore this number would be small in an ideal model. The highest value of RMSE can be found within model 1, being **`r round(comparison.table$RMSE[2], 3)`**, and decreases slight to model 2, being **`r round(comparison.table$RMSE[3], 3)`**, and the smallest value in model 1 being **`r round(comparison.table$RMSE[2], 3)`**. As it can be stated that model 1 would be "the best" according to the RMSE would be factual, however the numerical differences between model RMSE values are insufficient to allow them to be the sole determining factors of model quality. These reductions do not seem to be substantively meaningful, particularly between model 2 and 3, as the difference to denote a model as "better" is only a 0.003 difference. As a whole, I would say that model 2 seems to be the most promising model based on the adjusted R2 (as it considers both the complexity and accounting for variance), as well as a smaller RMSE (than model 1, but being similar to model 3). Finally, its R2 value is smaller than that of model 3, however the non-substantial increase in R2 is likely because of the added predictor rather than valid reasoning for variance. 
+
+## Comparing Model Performance and Statistics 
+
+```{r}
+#| label: performance-comparison
+#| results: hide
+
+performance.comparison <- compare_performance(
+  mod0,
+  mod1,
+  mod2,
+  mod3,
+  rank = TRUE)
+```
+
+```{r}
+#| label: select-model
+
+selected.row <- comparison.table |>
+  slice_max(
+    order_by = adj.r.squared,
+    n = 1,
+    with_ties = FALSE)
+
+selected.name <- selected.row$Models
+
+selected.model <- switch(
+  selected.name,
+  "M0: Null" = mod0,
+  "M1: Complaints" = mod1,
+  "M2: + Learning" = mod2,
+  "M3: + Raises" = mod3)
+
+```
+
+### Examining Assumptions and Diagnostic Plots
+```{r}
+#| label: Examining Assumptions 
+#| fig-cap: "Model 2 Diagnostic Plots"
+#| fig-height: 13
+#| fig-width: 12
+
+op <- par(mfrow = c(2, 2))
+plot(selected.model)
+par(op)
+```
+
+```r
+performance::check_model(mod2)
+
+check_collinearity(mod2)
+```
+
+Model 2 underwent regression diagnostic in order to examine the assumptions and assess whether confidence can still be put into this model. The assumptions that were satisfied was that of the posterior predictive check, as the lines predicted by the model are similar to those which were observed. The data reasonably met the majority of assumptions. Other assumptions, such as the normality of residuals and the linearity adequately fit the model as they show a linear pattern with reference lines and points being substantially flat and horizontal. As seen in the Q-Q plot, the residuals experience no substantial deviation, and that the data points reflect a relatively normal distribution. Based on the shape of the residuals, it seems like there is no substantial curvature, and that the reference line is fairly flat and horizontal. Additionally, there is a lack of systemic pattern around the line, which means that the model captures the random residuals, rather than missing a component which would cause it to become shaped. Additionally, influential observations were minimal and all fell within the guiding contour lines as seen in the graph. When testing for collinearity, the VIF was 1.55 which is quite low and therefore it can be adequately assumed that there is minimal, if any, relationship between the points. One problem that is potentially evident is that of the homogeneity of variance. The reference line and surrounding points should be flat and horizontal in an ideal model, however in this diagnostic test it is mostly horizontal, however it is waved (as are the points). We can see that residual variability does change somewhat throughout the fitted values, but not enough to be concerned. It maintains a relatively flat line with a small dip, however it is not a drastic shape, and not enough reason to discount the model, especially considering the other metrics supporting the plot. This is not necessarily dangerous for the model, however it may indicate that there may be differential variances in parts of the data. However, seeing as the other tests follow more ideal shapes, distributions, and patterns were typical, the model seems supported. This problem may simply reflect a bit more variation, however a lack of influential observations and a good normality of residuals would allow for less concern.
+
+## Select and report preferred model
+
+The model that I have selected is **`r selected.name`**. Though it is not the most complex, the analysis highlights the idea that complexity does not always increase the the predictive abilities and the confidence that should be had in a model. The examination of diagnostic plots of model 2 has allowed for confidence in the model through its features For example, the Q-Q plot showing no substantial deviation of residuals, as well as normality, a low VIF indicating independence of variables, minimal, if any influential points. As for the statistical values, it is important to assess the balance between the models. When involving just complaints into the model, naturally it will provide more complexity and improvement in predictive power compared to the intercept form. However, upon adding other predictors (learning and raises) - this is where it is crucial to evaluate whether this addition in complexity is supported and necessary based on whether its output is significantly improved from the previous level of the nested model. The addition of learning to complaints changed the values of  deltaR2, adjusted R2, RMSE and the nested F-statistic in a way which was noticeable comparative to whether the added parameter was valuable or purely by change - so a measurable change is good. However, when adding the final predictor, being raises, it exhibits a noticeably worse deltaR2 (practically a lack of change, as the number was so small), an adjusted R2 which was worse than model 2, an RMSE which was only changed by 0.003, and an unsubstantial change in the F statistic, displaying the added complexity not necessarily being above chance. The adjusted R2 value was best for model 2, however other values such as the F statistic and the deltaR2 might seem "better" for model 1, it is due to the comparison with model 0, which included no parameters and it compared to an intercept model - any chance would be perceived as major. The addition of learning allowed for positive and noticeable change in all categories, however the addition of raises in model 3 does not provide enough support that the added complexity and parameter would be worth the analysis, as the results are so similar and unchanged to model 2. 
+
+## Reporting on Selected Model
+
+```{r}
+#| label: extract-coefficients
+
+coefficient_results <- tidy(
+  selected.model,
+  conf.int = TRUE,
+  conf.level = 0.95)
+```
+
+### Create Regression Coefficient Table
+```{r}
+#| label: create-coefficient-table
+#| tbl-cap: "Regression Coefficients for Model 2"
+
+coefficient_results |>
+  select(
+    term,
+    estimate,
+    std.error,
+    conf.low,
+    conf.high,
+    p.value) |>
+  gt() |>
+  cols_label(
+    term = "Predictor",
+    estimate = "Estimate",
+    std.error = "SE",
+    conf.low = "95% CI lower",
+    conf.high = "95% CI upper",
+    p.value = "p") |>
+  fmt_number(
+    columns = c(
+      estimate,
+      std.error,
+      conf.low,
+      conf.high),
+    decimals = 3) |>
+  fmt(
+    columns = p.value,
+    fns = function(x) {
+      ifelse(
+        x < .001,
+        "< .001",
+        sprintf("%.3f", x))})
+#don't paste the output from the summary in the report 
+```
+
+
+### Reporting and Summarizing Overall Model Performance 
+
+Model two looks at the outcome being the overall workplace rating, based on two predictors, being complaints and learning. With respect to complaints, the association is positive, being (estimate = `r round(coefficient_results |> filter(term == "complaints") |> pull(estimate), 3)`), therefore associated with a higher rating. In the units of original variables, as the slope is `r round(coefficient_results |> filter(term == "complaints") |> pull(estimate), 3)`, every 1 point increase in the complaint scale would results in a **`r round(coefficient_results |> filter(term == "complaints") |> pull(estimate), 3)`-point** increase in overall rating. As there are two predictors being used, while measuring for complaints, predictors is being held constant. Within the confidence intervals, the difference between upper and lower limits [`r round(coefficient_results |> filter(term == "complaints") |> pull(conf.low), 3)`, `r round(coefficient_results |> filter(term == "complaints") |> pull(conf.high), 3)`] must be assessed, however the value is `r round((coefficient_results |> filter(term == "complaints") |> pull(conf.high)) - (coefficient_results |> filter(term == "complaints") |> pull(conf.low)), 3)` quite small and above zero,  we can therefore be fairly confident the association is positive. 
+
+When looking at learning, we can see that the association is positive, as the slope estimate is `r round(coefficient_results |> filter(term == "learning") |> pull(estimate), 3)`. This means that for every one unit increase in the learning, there is a **`r round(coefficient_results |> filter(term == "learning") |> pull(estimate), 3)`-point** increase in the overall rating. When assessing learning, being one of two predictors, the complaints variable is being held constant. When looking at the confidence intervals, the lower limit is negative and the upper is positive [`r round(coefficient_results |> filter(term == "learning") |> pull(conf.low), 3)`, `r round(coefficient_results |> filter(term == "learning") |> pull(conf.high), 3)`], respectively. However the difference between the two is `r round((coefficient_results |> filter(term == "learning") |> pull(conf.high)) - (coefficient_results |> filter(term == "learning") |> pull(conf.low)), 3)`, being relatively small, allowing confidence in the model still. 
+
+example of inlay code: Holding the other predictors constant, a one-unit increase in an occupation's average income is associated with a significant **`r round(coefficient_results |> filter(term == "income") |> pull(estimate), 4)`-point** increase in predicted occupational prestige, 95% CI [`r round(coefficient_results |> filter(term == "income") |> pull(conf.low), 3)`, `r round(coefficient_results |> filter(term == "income") |> pull(conf.high), 3)`].
+
+#Summarize + Report Model Performance
+
+```{r}
+#| output: model2-performance 
+#| tbl-cap: "Overall Performance of Model 2"
+
+selected.row |>
+  select(
+    Models,
+    r.squared,
+    adj.r.squared,
+    RMSE) |>
+  gt() |>
+  cols_label(
+    Models = "Model",
+    r.squared = "R²",
+    adj.r.squared = "Adjusted R²",
+    RMSE = "RMSE") |>
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 3)
+```
+
+### Overall model performance
+The selected model, which is **`r selected.name`**, and it explains about  **`r round(100 * selected.row$r.squared, 1)`%** of the overall workplace ratings. The R² value means that including complaints and learning into our model of employee ratings account/be predictive of for *code* amount of variance in the ratings. 
+
+Its adjusted R² is **`r round(selected.row$adj.r.squared, 3)`**, and its in-sample RMSE is **`r round(selected.row$RMSE, 2)`**. The adjusted R² value also accounts for the variance coming from the predictors, however it creates a balance through penalty of the added predictors/complexity, so model 2 having *code* would mean that adding the complaints and learning together provide a substantial understanding of what might impact overall ratings without incorporating too many factors that will not have an impact on the ratings, yet are included. Finally, the RMSE is the residuals of the model compared to the observations, however it is not general predictive accuracy. It compares how model two might incorporate the learning and complaints to predict the ratings, and how the model can predict rather than chance; this value is compared to what has been observed from the employees. As a whole, it gives a picture of how accurate the model is at predicting the overall workplace ratings when employee complaints and learning are analyzed factors. 
+
+## Conclusions and Limitations 
+
+This analysis provides insights into how factors such as handling of employee complaints, opportunity to learn, and raises may impact the overall workplace ratings from the employees. Through this analysis, we assessed which of these factors had the greatest contribution to ratings, and were investigated using regression model comparisons. These comparisons allowed us to assess which factors explained meaningful variations as they added complexity.
+
+We were able to conclude that the two predictor values, being handling of complaints, and opportunity to learn provided the greatest influence on the overall employee ratings. Interestingly, the pay raises did not influence employee ratings as much when incorporated into the model - potentially as individuals value the quality of the workplace over the compensation. Pay increases seemingly carried less weight than being heard, understood, and encouraged through professional development. 
+
+This analysis provided meaningful insights into the significance of factors which play a role in employee workplace ratings. 
+
+Some limitations include: 
+- Performance in the sample may not be reflective out predictive accuracy out of the sample 
+- These are correlative, rather than causal associations 
+- There may be additional  factors which may influence the nature of response, and alterior motives 
+- Date is observational, and reliant upon truth of individual response 
